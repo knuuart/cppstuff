@@ -136,7 +136,15 @@ vector<Vertex> loadUserGeneratedModel() {
 		//    of the ith vertex at the base of the cone. Z-coordinate is very similar.
 		// - For the normal calculation, you'll want to use the cross() function for
 		//   cross product, and Vec3f's .normalized() or .normalize() methods.
-		
+		v0.position = 0, 0, 0;
+		v1.position = -1, -1, 0;
+		v2.position = 1, -1, 0;
+		Vec3f cross_prod = v0.position.cross(v2.position);
+		Vec3f normal = cross_prod.normalized();
+		v0.normal = normal;
+		v1.normal = normal;
+		v2.normal = normal;
+
 		// Then we add the vertices to the array.
 		// .push_back() grows the size of the vector by one, copies its argument,
 		// and places the copy at the back of the vector.
