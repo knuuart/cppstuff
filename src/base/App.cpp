@@ -67,11 +67,20 @@ vector<Vertex> unpackIndexedData(
 		// YOUR CODE HERE (R3)
 		// Unpack the indexed data into a vertex array. For every face, you have to
 		// create three vertices and add them to the vector 'vertices'.
-
+		Vertex v0, v1, v2;
+		v0.position = positions[f[0]];
+		v0.normal = normals[f[1]];
+		v1.position = positions[f[2]];
+		v1.normal = normals[f[3]];
+		v2.position = positions[f[4]];
+		v2.normal = normals[f[5]];
 		// f[0] is the index of the position of the first vertex
 		// f[1] is the index of the normal of the first vertex
 		// f[2] is the index of the position of the second vertex
 		// ...
+		vertices.push_back(v0);
+		vertices.push_back(v1);
+		vertices.push_back(v2);
 	}
 
 	return vertices;
@@ -123,7 +132,7 @@ vector<Vertex> loadUserGeneratedModel() {
 	Vertex v0, v1, v2;
 
 	// Generate one face at a time
-	for(auto i = 0u; i < faces; ++i)	{
+	for(auto i = 0u; i < faces; i++)	{
 		// YOUR CODE HERE (R2)
 		// Figure out the correct positions of the three vertices of this face.
 		// v0.position = ...
@@ -136,14 +145,12 @@ vector<Vertex> loadUserGeneratedModel() {
 		//    of the ith vertex at the base of the cone. Z-coordinate is very similar.
 		// - For the normal calculation, you'll want to use the cross() function for
 		//   cross product, and Vec3f's .normalized() or .normalize() methods.
-		v0.position = 0, 0, 0;
-		v1.position = -1, -1, 0;
-		v2.position = 1, -1, 0;
-		Vec3f cross_prod = v0.position.cross(v2.position);
+		v0.position = Vec3f(0, 0, 0);
+		v1.position = Vec3f(FW::cos(angle_increment * i) * radius, -height, FW::sin(angle_increment * i) * radius);
+		v2.position = Vec3f(FW::cos(angle_increment * (i + 1)) * radius, -height, FW::sin(angle_increment * (i + 1)) * radius);
+		Vec3f cross_prod = v2.position.cross(v1.position);
 		Vec3f normal = cross_prod.normalized();
-		v0.normal = normal;
-		v1.normal = normal;
-		v2.normal = normal;
+		v0.normal = v1.normal = v2.normal = normal;
 
 		// Then we add the vertices to the array.
 		// .push_back() grows the size of the vector by one, copies its argument,
@@ -463,11 +470,15 @@ vector<Vertex> App::loadObjFileModel(string filename) {
 
 		if (s == "v") { // vertex position
 			// YOUR CODE HERE (R4)
+			iss >> v.x >> v.y >> v.z;
+			positions.push_back(v);
 			// Read the three vertex coordinates (x, y, z) into 'v'.
 			// Store a copy of 'v' in 'positions'.
 			// See std::vector documentation for push_back.
 		} else if (s == "vn") { // normal
 			// YOUR CODE HERE (R4)
+			iss >> v.x >> v.y >> v.z;
+			normals.push_back(v);
 			// Similar to above.
 		} else if (s == "f") { // face
 			// YOUR CODE HERE (R4)
@@ -481,11 +492,17 @@ vector<Vertex> App::loadObjFileModel(string filename) {
 			// Since we are not using textures in this exercise, you can ignore
 			// the texture indices by reading them into a temporary variable.
 
-			unsigned sink; // Temporary variable for reading the unused texture indices.
-
+			unsigned sink, v1, vn1, v2, vn2, v3, vn3; // Temporary variable for reading the unused texture indices.
+			iss >> v1 >> sink >> vn1 >> v2 >> sink >> vn2 >> v3 >> sink >> vn3;
+			f[0] = v1 - 1;
+			f[1] = vn1 - 1;
+			f[2] = v2 - 1;
+			f[3] = vn2 - 1;
+			f[4] = v3 - 1;
+			f[5] = vn3 - 1;
 			// Note that in C++ we index things starting from 0, but face indices in OBJ format start from 1.
 			// If you don't adjust for that, you'll index past the range of your vectors and get a crash.
-
+			faces.push_back(f);
 			// It might be a good idea to print the indices to see that they were read correctly.
 			// cout << f[0] << " " << f[1] << " " << f[2] << " " << f[3] << " " << f[4] << " " << f[5] << endl;
 		}

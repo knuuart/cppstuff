@@ -1,15 +1,24 @@
-# Visual Studio Intellisense
-*.sdf
-
 # Visual Studio solution user options
 *.suo
 
 # Visual Studio user specific stuff
 *.user
 
-# Visual Studio temp file (only when VS open)
-*.opensdf
 
 # directories
 bin/
 build/
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio temp something
+.vs/
