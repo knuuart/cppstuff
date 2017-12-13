@@ -8,9 +8,9 @@
 # directories
 bin/
 build/
+ipch/
 
 # Visual C++ cache files
-ipch/
 *.aps
 *.ncb
 *.opendb
