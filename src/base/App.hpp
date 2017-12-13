@@ -61,6 +61,8 @@ private:
 	std::vector<Vertex>	vertices_;
 
 	float				camera_rotation_angle_;
+	float				model_rotation_angle_;
+	Vec3f				model_scale_;
 	Vec3f				model_translation;
 
 	// YOUR CODE HERE (R1)

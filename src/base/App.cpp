@@ -148,9 +148,21 @@ vector<Vertex> loadUserGeneratedModel() {
 		v0.position = Vec3f(0, 0, 0);
 		v1.position = Vec3f(FW::cos(angle_increment * i) * radius, -height, FW::sin(angle_increment * i) * radius);
 		v2.position = Vec3f(FW::cos(angle_increment * (i + 1)) * radius, -height, FW::sin(angle_increment * (i + 1)) * radius);
-		Vec3f cross_prod = v2.position.cross(v1.position);
+
+		Vec3f U = v1.position - v0.position;
+		Vec3f V = v2.position - v0.position;
+		/*Vec3f testcross = U.cross(V);
+		cout << "testcross: " << testcross.x << endl;
+
+		Vec3f wrongcross = v1.position.cross(v2.position);
+		cout << "wrongcross: " << wrongcross.x << endl;*/
+		Vec3f realNormal = V.cross(U);
+		//cout << "realnormal: " << realNormal.x << endl;
+		v0.normal = v1.normal = v2.normal = realNormal.normalized();
+
+		/*Vec3f cross_prod = v2.position.cross(v1.position);
 		Vec3f normal = cross_prod.normalized();
-		v0.normal = v1.normal = v2.normal = normal;
+		v0.normal = v1.normal = v2.normal = normal;*/
 
 		// Then we add the vertices to the array.
 		// .push_back() grows the size of the vector by one, copies its argument,
@@ -168,6 +180,8 @@ App::App(void)
 	model_changed_			(true),
 	shading_toggle_			(false),
 	shading_mode_changed_	(false),
+	model_rotation_angle_	(0.0f),
+	model_scale_			(1, 1, 1),
 	camera_rotation_angle_	(0.0f)
 {
 	static_assert(is_standard_layout<Vertex>::value, "struct Vertex must be standard layout to use offsetof");
@@ -253,6 +267,14 @@ bool App::handleEvent(const Window::Event& ev) {
 			model_translation += Vec3f(0, 0.1, 0);
 		else if(ev.key == FW_KEY_DOWN)
 			model_translation += Vec3f(0, -0.1, 0);
+		if (ev.key == FW_KEY_SLASH)
+			model_rotation_angle_ -= 0.05 * FW_PI;
+		else if (ev.key == FW_KEY_ASTERISK)
+			model_rotation_angle_ += 0.05 * FW_PI;
+		if (ev.key == FW_KEY_PLUS)
+			model_scale_.x += 0.1;
+		else if (ev.key == FW_KEY_MINUS)
+			model_scale_.x -= 0.1;
 	}
 	
 	if (ev.type == Window::EventType_KeyUp) {
@@ -412,11 +434,16 @@ void App::render() {
 	// YOUR CODE HERE (R1)
 	// Set the model space -> world space transform to translate the model according to user input.
 	Mat4f mP;
+	Mat4f mR;
+	Mat3f mRot = Mat3f::rotation(Vec3f(0, 1, 0), -model_rotation_angle_);
+	mR.setCol(0, Vec4f(mRot.getCol(0), 0));
+	mR.setCol(1, Vec4f(mRot.getCol(1), 0));
+	mR.setCol(2, Vec4f(mRot.getCol(2), 0));
 	/*mP.setCol(0, Vec4f(1, 0, 0, 0));
 	mP.setCol(1, Vec4f(0, 1, 0, 0));
 	mP.setCol(2, Vec4f(0, 0, 1, 0));*/
 	mP.setCol(3, Vec4f(model_translation.x, model_translation.y, model_translation.z, 1));
-	Mat4f modelToWorld = mP;
+	Mat4f modelToWorld = mP * mP.scale(model_scale_) * mR;
 	
 	// Draw the model with your model-to-world transformation.
 	glUniformMatrix4fv(gl_.model_to_world_uniform, 1, GL_FALSE, modelToWorld.getPtr());
@@ -492,14 +519,24 @@ vector<Vertex> App::loadObjFileModel(string filename) {
 			// Since we are not using textures in this exercise, you can ignore
 			// the texture indices by reading them into a temporary variable.
 
-			unsigned sink, v1, vn1, v2, vn2, v3, vn3; // Temporary variable for reading the unused texture indices.
-			iss >> v1 >> sink >> vn1 >> v2 >> sink >> vn2 >> v3 >> sink >> vn3;
+			unsigned sink; // Temporary variable for reading the unused texture indices.
+			iss >> f[0] >> sink >> f[1] >> f[2] >> sink >> f[3] >> f[4] >> sink >> f[5];
+			for (auto& i : f) {
+				i -= 1;
+			}
+			/*array<unsigned, 6> values;
+			iss >> values[0] >> sink >> values[1] >> values[2] >> sink >> values[3] >> values[4] >> sink >> values[5];
+			for (size_t i = 0; i < f.size(); i++)
+			{
+				f[i] = values[i] - 1;
+			}*/
+			/*iss >> v1 >> sink >> vn1 >> v2 >> sink >> vn2 >> v3 >> sink >> vn3;
 			f[0] = v1 - 1;
 			f[1] = vn1 - 1;
 			f[2] = v2 - 1;
 			f[3] = vn2 - 1;
 			f[4] = v3 - 1;
-			f[5] = vn3 - 1;
+			f[5] = vn3 - 1;*/
 			// Note that in C++ we index things starting from 0, but face indices in OBJ format start from 1.
 			// If you don't adjust for that, you'll index past the range of your vectors and get a crash.
 			faces.push_back(f);
